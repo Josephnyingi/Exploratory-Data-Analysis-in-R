@@ -1,0 +1,289 @@
+    ---
+title: "Ad_cryptography"
+author: "Joseph"
+date: "1/9/2021"
+output: html_document
+---
+
+## Defining the Research Problem
+## Specifying the Research Question
+The goal of this analysis is to identify individuals who are most likely to click on a cryptography course advertisement. This project uses R for analysis.
+
+## Defining the Metric for Success
+The project will be considered a success when we are able to clean and analyze past data to segment blog users and identify individuals who should be targeted for an advertisement.
+
+## Understanding the Context
+A Kenyan entrepreneur has created an online cryptography course and would want to advertise it on her blog. She currently targets audiences originating from various countries. In the past, she ran ads to advertise a related course on the same blog and collected data in the process. She has employed my services as a Data Science Consultant to help her identify which individuals are most likely to click on her ads.
+
+## Recording the Experimental Design
+Below are the steps that will be followed in this analysis in order to respond to the research question satisfactorily:
+
+1. Read the Data
+2. Check the Data
+3. Data Cleaning
+4. Univariate Analysis
+5. Bivariate Analysis
+6. Conclusion and Recommendation.
+
+## Data Relevance
+The data used for the project was collected from a prior advertisement for a similar course on the same platform. The dataset contains 10 attributes and 1,000 records. These attributes contain descriptive information of past blog users. Some of the attributes include country, age and gender of the user among others.
+
+## Install pre-requisite packages
+    
+```{r}
+#installing relevant packages
+#install.packages("dplyr")
+#install.packages("stats")
+#install.packages("data.table")
+#install.packages("tidyverse")
+#install.packages("ggcorrplot")
+```
+
+## Importing relevant libraries
+```{r}
+#installing required libraries
+library(stats)
+library(dplyr)
+library(data.table)
+library(tidyverse)
+library(ggcorrplot)
+library(knitr)
+library(rmarkdown)
+```
+
+# 1. Reading the Data
+```{r}
+# Reading the data into R from the CSV file
+ad <- fread("advertising.csv")
+head(ad)
+```
+               
+# 2. Checking the Data
+```{r}
+#checking the top 6 records
+head(ad)
+#Checking the bottom 6 records
+tail(ad)
+#Checking the total number of rows
+nrow(ad)
+#Checking the total number of columns
+ncol(ad)
+#Checking all columns names
+names(ad)
+#Checking the data types of each column
+str(ad)
+#Checking the number of unique values in each column
+lengths(lapply(ad, unique))
+#Checking the summary of the data
+summary(ad)
+```
+
+# 3. Data cleaning
+### missing data
+```{r}
+#Checking the presence of missing values
+colSums(is.na(ad))
+```
+       No missing values in any columns of the              dataframe.
+### Outliers
+```{r}
+#creating a variable with only numeric columns
+library(tidyverse)
+my_data <-ad %>% select(1,2,3,4,7,10)
+#Previewing outliers for numeric columns using boxplots
+boxplot(my_data)
+```
+  We see that 'area income' is the only attribute with outliers. we shall investigate each column individually for further analysis.
+```{r}
+#Boxplot for daily time spent variable
+boxplot(ad$`Daily Time Spent on Site`)
+```
+```{r}
+boxplot(ad$Age)
+```
+```{r}
+#Boxplot for daily internet usage variable
+boxplot(ad$`Daily Internet Usage`)
+```
+```{r}
+#Displaying all the outliers in the Area Income column.
+boxplot(ad$`Area Income`)
+```
+The above graph for area income has outliers
+```{r}
+#Displaying all the outliers in the clicked on Ad column
+boxplot(ad$`Clicked on Ad`)
+```
+```{r}
+#Checking the countries associated with outliers incomes
+ad$Country[ad$`Area Income` %in% c(17709.98, 18819.34, 15598.29, 15879.1, 14548.06, 13996.5, 14775.5, 18368.75)]
+```
+  We observe that the really low 'outlier' income numbers are associated with developing countries. This is consistent with observations in the real world therefore we will keep the ouliers.
+ ### Anomalies
+```{r}
+#Checking for duplicate data
+duplicated_rows <- ad[duplicated(ad),]
+duplicated_rows
+```
+      No duplicate records in the dataset
+      
+# Exploratory Data Analysis (EDA)
+     
+## Univariate Analysis
+     
+In this section, we will investigate each variable individually. The steps here include calculating and interpreting measures of central tendency (mode, median, mean) as well as computing and explaining the range, the interquartile range, the standard deviation, variance, skewness, and kurtosis
+```{r}
+# Calculating the mean for all numeric columns
+lapply(my_data,FUN=mean)
+```
+   Average age of the blog users is 36 while the average income is 55,    000.
+```{r}
+#Calculating the median of all numeric columns
+lapply(my_data,FUN=median)
+```
+```{r}
+# Calculating the mode for all numeric columns
+getmode <- function(v) {
+   uniqv <- unique(v)
+   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+lapply(my_data,FUN=getmode)
+```
+```{r}
+# Calculating the minimum value for all numeric columns
+lapply(my_data,FUN=min)
+```
+```{r}
+# Calculating the maximum value for all numeric columns
+lapply(my_data,FUN=max)
+```
+   Lowest income is 13996.5 while the highest is 79484.8
+   The youngest age is 19 and the oldest blog user's age is 61.
+```{r}
+# Checking the range for all numeric columns
+
+lapply(my_data,FUN=range)
+```
+```{r}
+# Calculating the quantiles for all numeric columns
+
+lapply(my_data,FUN=quantile)
+```
+```{r}
+# Calculating the variance for all numeric columns
+
+lapply(my_data,FUN=var)
+```
+```{r}
+# Calculating the standard deviation for all numeric columns
+
+lapply(my_data,FUN=sd)
+```
+```{r}
+# Plotting a histogram for age variable
+
+hist(ad$Age)
+```
+     The frequency distribution above depicts a relatively normal          distribution for the age attribute. Most individuals' age is           centered around   the mean.
+```{r}
+
+# Plotting a histogram for area income variable
+
+hist(ad$`Area Income`)
+```
+     Income distribution is skewed to the left.
+```{r}
+# Plotting a histogram for daily time variable
+
+hist(ad$`Daily Time Spent on Site`)
+```
+```{r}
+# Plotting a histogram for daily internet variable
+
+hist(ad$`Daily Internet Usage`)
+```
+```{r}
+# Plotting a histogram for gender variable
+
+hist(ad$Male)
+```
+     The number of males and females is fairly balanced.
+```{r}
+
+# Plotting a histogram for clicked ad variable
+
+hist(ad$`Clicked on Ad`)
+```
+    The target variable for this analysis has equal observations for      both classes.
+```{r}
+# Checking actual number of male vs females
+
+table(ad$Male)
+```
+    
+```{r}
+# Confirming distribution of classes
+
+table(ad$`Clicked on Ad`)
+```
+```{r}
+# Bar plot of the age variable
+
+age <- ad$Age
+age_freq <- table(age)
+barplot(age_freq)
+```
+```{r}
+#Checking distribution of each country
+
+table(ad$Country)
+```
+ 
+# 4. Bivariate Analysis
+ In this section, we investigate the relationship of different variables by creating relevant visualizations such as scatter plots, correlation matrix and Pearson correlation coefficient.    
+```{r}
+corr = round(cor(select_if(my_data, is.numeric)), 2)
+ggcorrplot(corr, hc.order = T, ggtheme = ggplot2::theme_gray,
+   colors = c("#6D9EC1", "white", "#E46726"), lab = T)
+```
+    There's a relatively strong negative correlation between daily internet usage, area income, daily time spent on site vs clicked  on ad.
+```{r}
+# Scatter plot to compare age vs income
+
+plot(ad$`Age`, ad$`Area Income`, xlab="Age", ylab="Income")
+
+```
+     Most high income individuals are between the ages of 30 to 50.
+```{r}
+# Scatter plot to compare income vs Clicked on ad
+
+plot(ad$`Clicked on Ad`, ad$`Area Income`, xlab="Clicked on Ad", ylab="Income")
+```
+   Most low income individuals clicked on the ad.
+```{r}
+# Scatter plot to compare age vs daily time spent
+
+plot(ad$Age, ad$`Daily Time Spent on Site`, xlab="Age", ylab="Time Spent")
+```
+```{r}
+# Scatter plot to compare clicked on ad vs time spent
+plot(ad$`Clicked on Ad`, ad$`Daily Time Spent on Site`, xlab="Clicked on Ad", ylab="Time Spent")
+```
+   Most users who spent the least amount of time on the blog clicked      on the ad.
+```{r}
+# Scatter plot to compare clicked on ad vs internet usage
+
+plot(ad$`Clicked on Ad`, ad$`Daily Internet Usage`, xlab="Clicked on Ad", ylab="Internet Usage")
+```
+```{r}
+# Scatter plot to compare age vs Clicked on ad
+
+plot(ad$`Clicked on Ad`, ad$`Age`, xlab="Clicked on Ad", ylab="Age")
+```
+   
+# 5. Conclusion and Recommendations
+From the above analysis, below are some of the conclusions and recommendations that can be provided to the business user based on the data:
+
+There is no need to have a time threshold before one can view the course advertisement on the blog. This is because most users who spent a relatively short time on the blog clicked on a previous similar ad.
+Users who are relatively older (above 50) are most likely to click on the ad. The advertisement can therefore target that age group more compared to other age groups.
+Low income areas should still be included in the target group of the ad since users in that income bracket are most likely to view the advertisement. Areas that experience low internet usage should also be included in the target audience.
